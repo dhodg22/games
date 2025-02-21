@@ -104,9 +104,9 @@ body {
         <input type="text" id="catImageURL" value="https://pngmax.com/_next/image?url=https%3A%2F%2Fpng-max.s3.ap-south-1.amazonaws.com%2Flow%2F936505e8-677a-4a6a-af4e-e4a8c0f31dc9.png&w=1200&q=75">
         <img id="catImagePreview" src="https://pngmax.com/_next/image?url=https%3A%2F%2Fpng-max.s3.ap-south-1.amazonaws.com%2Flow%2F936505e8-677a-4a6a-af4e-e4a8c0f31dc9.png&w=1200&q=75" alt="Cat Preview">
 
-        <label for="iceCreamImageURL">Ice Cream Image URL:</label>
-        <input type="text" id="iceCreamImageURL" value="https://pngmax.com/_next/image?url=https%3A%2F%2Fpng-max.s3.ap-south-1.amazonaws.com%2Flow%2F4b6460bb-09ae-433c-b16a-d19d30adbc8e.png&w=1200&q=75">
-        <img id="iceCreamImagePreview" src="https://pngmax.com/_next/image?url=https%3A%2F%2Fpng-max.s3.ap-south-1.amazonaws.com%2Flow%2F4b6460bb-09ae-433c-b16a-d19d30adbc8e.png&w=1200&q=75" alt="Ice Cream Preview">
+        <label for="iceCreamImageURL">Reward Image URL:</label>
+        <input type="text" id="iceCreamImageURL" value="https://static.vecteezy.com/system/resources/thumbnails/020/716/945/small_2x/3d-glossy-dollar-coin-golden-reflective-dollar-coin-3d-illustration-png.png">
+        <img id="iceCreamImagePreview" src="https://static.vecteezy.com/system/resources/thumbnails/020/716/945/small_2x/3d-glossy-dollar-coin-golden-reflective-dollar-coin-3d-illustration-png.png" alt="Ice Cream Preview">
 
         <label for="backgroundImageURL">Background Image URL:</label>
         <input type="text" id="backgroundImageURL" value="https://res.cloudinary.com/dcht3dytz/image/upload/v1740104624/6e44953d-879c-40fa-91c0-8d39500a8180_kafqx8.webp">
@@ -164,7 +164,7 @@ body {
     let catX = canvas.width / 2;
     let catY = canvas.height - 120;
     let catWidth = 120;
-    const catHeight = 100;
+    let catHeight = 100;
     let catSpeed = 16;
     let score = 0;
     let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 0;
@@ -182,6 +182,9 @@ body {
     let flipAngle = 0;
     let keysPressed = {};
     let originalCatImageSrc = "https://pngmax.com/_next/image?url=https%3A%2F%2Fpng-max.s3.ap-south-1.amazonaws.com%2Flow%2F936505e8-677a-4a6a-af4e-e4a8c0f31dc9.png&w=1200&q=75";
+    let initialBaseSpeed = 2; // Store the initial baseSpeed
+    let pizzaCount = 0; // Track the number of pizzas collected
+    let initialCatY; // Store the initial catY value
 
     // Initialize displays
     scoreDisplay.textContent = `Score: ${score}`;
@@ -201,8 +204,8 @@ body {
     // Images (Load defaults immediately)
     const catImage = new Image();
     catImage.src = originalCatImageSrc;
-    const iceCreamImage = new Image();
-    iceCreamImage.src = "https://pngmax.com/_next/image?url=https%3A%2F%2Fpng-max.s3.ap-south-1.amazonaws.com%2Flow%2F4b6460bb-09ae-433c-b16a-d19d30adbc8e.png&w=1200&q=75";
+    const rewardImage = new Image();
+    rewardImage.src = "https://static.vecteezy.com/system/resources/thumbnails/020/716/945/small_2x/3d-glossy-dollar-coin-golden-reflective-dollar-coin-3d-illustration-png.png";
     const backgroundImage = new Image();
     backgroundImage.src = "https://res.cloudinary.com/dcht3dytz/image/upload/v1740104624/6e44953d-879c-40fa-91c0-8d39500a8180_kafqx8.webp";
     const yarnImage = new Image();
@@ -277,7 +280,7 @@ body {
         width: 60,
         height: 60,
         speed: baseSpeed + Math.random() * 1,
-        type: isPowerUp ? 'speed' : 'iceCream',
+        type: isPowerUp ? 'speed' : 'reward',
         splatTimer: 0
       };
     }
@@ -317,6 +320,8 @@ body {
       }
       if (!gameStarted && event.code === 'Space') {
         gameStarted = true;
+        baseSpeed = initialBaseSpeed; // Reset baseSpeed when the game starts
+        catY = initialCatY; // Reset catY to initial value
         gameLoop();
       }
       if (gameOver && event.code === 'Space') {
@@ -367,7 +372,7 @@ body {
     function applySettings() {
       catImage.src = document.getElementById('catImageURL').value;
       originalCatImageSrc = catImage.src;
-      iceCreamImage.src = document.getElementById('iceCreamImageURL').value;
+      rewardImage.src = document.getElementById('iceCreamImageURL').value;
       backgroundImage.src = document.getElementById('backgroundImageURL').value;
       yarnImage.src = document.getElementById('yarnImageURL').value;
       speedImage.src = document.getElementById('speedImageURL').value;
@@ -377,7 +382,7 @@ body {
 
       // Update thumbnails
       document.getElementById('catImagePreview').src = catImage.src;
-      document.getElementById('iceCreamImagePreview').src = iceCreamImage.src;
+      document.getElementById('iceCreamImagePreview').src = rewardImage.src;
       document.getElementById('backgroundImagePreview').src = backgroundImage.src;
       document.getElementById('yarnImagePreview').src = yarnImage.src;
       document.getElementById('speedImagePreview').src = speedImage.src;
@@ -443,9 +448,15 @@ body {
         if (powerUpTimer <= 0) {
           powerUpActive = null;
           catSpeed = 16;
+          pizzaCount = 0; // Reset pizza count
+          catWidth = 120;
+          catHeight = 100;
+          catY = initialCatY; // Restore original position
+
           if (catImage.src === giftOutfitImage.src) {
             catImage.src = originalCatImageSrc;
           }
+
         }
       }
 
@@ -465,10 +476,14 @@ body {
       // Update Movement
       updateMovement();
 
+      // Calculate the new cat position based on the increased size
+      const heightIncrease = catHeight - 100; // Calculate the height increase
+      const positionOffset = heightIncrease; // Adjust the cat's position upwards to keep the bottom aligned
+
       // Draw Cat with Wobble or Flip
       wobble *= 0.85;
       ctx.save();
-      ctx.translate(catX + catWidth / 2, catY + catHeight / 2);
+      ctx.translate(catX + catWidth / 2, catY + catHeight / 2 - positionOffset);
       ctx.rotate(isJumping ? flipAngle : wobble * Math.PI / 180);
       ctx.drawImage(catImage, -catWidth / 2, -catHeight / 2, catWidth, catHeight);
       if (isJumping) {
@@ -478,7 +493,7 @@ body {
       }
       ctx.restore();
 
-      // Spawn Falling Items (Ice Cream and Pizza)
+      // Spawn Falling Items (Reward and Pizza)
       if (Date.now() > nextItemTime && items.length < maxItems) {
         items.push(createItem());
         nextItemTime = Date.now() + 2000 / gameSpeed;
@@ -537,8 +552,8 @@ body {
           continue;
         }
 
-        if (item.type === 'iceCream') {
-          ctx.drawImage(iceCreamImage, item.x, item.y, item.width, item.height);
+        if (item.type === 'reward') {
+          ctx.drawImage(rewardImage, item.x, item.y, item.width, item.height);
         } else if (item.type === 'speed') {
           ctx.drawImage(speedImage, item.x, item.y, item.width, item.height);
         } else if (item.type === 'gift') {
@@ -556,7 +571,9 @@ body {
           if (item.type === 'speed') {
             powerUpActive = 'speed';
             powerUpTimer = 200;
-            catSpeed = 24;
+            pizzaCount++; // Increment the pizza count
+             catWidth = 120 * (1 + 0.5 * pizzaCount);
+             catHeight = 100 * (1 + 0.5 * pizzaCount);
           } else if (item.type === 'gift') {
             powerUpActive = 'gift';
             powerUpTimer = 480; // 8 seconds at 60fps
@@ -564,7 +581,7 @@ body {
           }
           items.splice(i, 1);
         } else if (item.y > canvas.height) {
-          if (item.type === 'iceCream') {
+          if (item.type === 'reward') {
             item.splatTimer = 60;
             gameOver = true;
             playSound(220, 0.3);
@@ -627,11 +644,13 @@ body {
       baseSpeed = 2;
       catSpeed = 16;
       catWidth = 120;
+      catHeight = 100;
       powerUpActive = null;
       nextItemTime = 0;
       nextYarnTime = 0;
       nextSquirrelTime = 0;
       catImage.src = originalCatImageSrc;
+      pizzaCount = 0;
       gameLoop();
     }
 
@@ -641,6 +660,8 @@ body {
     // Ensure applySettings runs on page load to sync previews
     window.onload = () => {
       applySettings();
+      initialBaseSpeed = baseSpeed; // Store the initial baseSpeed
+      initialCatY = catY
     };
   </script>
 </body>
