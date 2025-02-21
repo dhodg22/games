@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Ice Cream Cat Balance!</title>
+<style>
+body {
+  font-family: sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f0f0f0;
+  overflow: hidden;
+}
+#gameContainer {
+  display: flex;
+  height: 100vh;
+}
+#gameCanvas {
+  border: 2px solid black;
+  flex-grow: 1;
+}
+#leftPanel {
+  width: 200px;
+  background-color: #e0e0e0;
+  padding: 10px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+#scoreContainer {
+  text-align: center;
+  margin-bottom: 20px;
+}
+#score {
+  font-size: 36px;
+  font-weight: bold;
+  color: #ff4500;
+  transition: transform 0.2s ease;
+}
+#highScore {
+  font-size: 18px;
+  color: #555;
+}
+#settingsContainer {
+  flex-grow: 1;
+  overflow-y: auto;
+}
+#settingsContainer label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+#settingsContainer input[type="text"] {
+  width: 100%;
+  padding: 5px;
+  margin-bottom: 5px;
+  font-size: 12px;
+}
+#settingsContainer img {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  margin-bottom: 10px;
+  display: block;
+}
+#applyButton, #fullscreenButton, #minimizeButton, #muteButton {
+  width: 100%;
+  padding: 5px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+#minimizeButton {
+  display: none;
+}
+#controlsContainer {
+  position: sticky;
+  bottom: 0;
+  background-color: #e0e0e0;
+  padding-top: 10px;
+}
+#speedSliderContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#speedSlider {
+  width: 150px;
+  margin-right: 10px;
+}
+#speedLabel {
+  font-size: 14px;
+}
+</style>
+</head>
+<body>
+  <div id="gameContainer">
+    <div id="leftPanel">
+      <div id="scoreContainer">
+        <div id="score">Score: 0</div>
+        <div id="highScore">High Score: 0</div>
+      </div>
+      <div id="settingsContainer">
+        <label for="catImageURL">Cat Image URL:</label>
+        <input type="text" id="catImageURL" value="https://pngmax.com/_next/image?url=https%3A%2F%2Fpng-max.s3.ap-south-1.amazonaws.com%2Flow%2F936505e8-677a-4a6a-af4e-e4a8c0f31dc9.png&w=1200&q=75">
+        <img id="catImagePreview" src="https://pngmax.com/_next/image?url=https%3A%2F%2Fpng-max.s3.ap-south-1.amazonaws.com%2Flow%2F936505e8-677a-4a6a-af4e-e4a8c0f31dc9.png&w=1200&q=75" alt="Cat Preview">
+
+        <label for="iceCreamImageURL">Ice Cream Image URL:</label>
+        <input type="text" id="iceCreamImageURL" value="https://pngmax.com/_next/image?url=https%3A%2F%2Fpng-max.s3.ap-south-1.amazonaws.com%2Flow%2F4b6460bb-09ae-433c-b16a-d19d30adbc8e.png&w=1200&q=75">
+        <img id="iceCreamImagePreview" src="https://pngmax.com/_next/image?url=https%3A%2F%2Fpng-max.s3.ap-south-1.amazonaws.com%2Flow%2F4b6460bb-09ae-433c-b16a-d19d30adbc8e.png&w=1200&q=75" alt="Ice Cream Preview">
+
+        <label for="backgroundImageURL">Background Image URL:</label>
+        <input type="text" id="backgroundImageURL" value="https://files.oaiusercontent.com/file-3BAUCABVh6pb5H4LQb9eqt?se=2025-02-20T21%3A39%3A37Z&sp=r&sv=2024-08-04&sr=b&rscc=max-age%3D604800%2C%20immutable%2C%20private&rscd=attachment%3B%20filename%3D72537f95-595a-4747-a5c8-e53d92bd9864.webp&sig=ynRoxtoqplmNH8j/deqeFrTaJr%2B8b30o2ZVBAPVXx4k%3D">
+        <img id="backgroundImagePreview" src="https://files.oaiusercontent.com/file-3BAUCABVh6pb5H4LQb9eqt?se=2025-02-20T21%3A39%3A37Z&sp=r&sv=2024-08-04&sr=b&rscc=max-age%3D604800%2C%20immutable%2C%20private&rscd=attachment%3B%20filename%3D72537f95-595a-4747-a5c8-e53d92bd9864.webp&sig=ynRoxtoqplmNH8j/deqeFrTaJr%2B8b30o2ZVBAPVXx4k%3D" alt="Background Preview">
+
+        <label for="yarnImageURL">Yarn Ball Image URL:</label>
+        <input type="text" id="yarnImageURL" value="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/0478d388-e8c3-480e-b46b-253a3eea9431/dib082h-9c97a93d-bf7c-4a6c-b672-8c4654f80bd1.png/v1/fit/w_772,h_920/dogman__dog_man__render_by_versusstockpile_dib082h-414w-2x.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9OTIwIiwicGF0aCI6IlwvZlwvMDQ3OGQzODgtZThjMy00ODBlLWI0NmItMjUzYTNlZWE5NDMxXC9kaWIwODJoLTljOTdhOTNkLWJmN2MtNGE2Yy1iNjcyLThjNDY1NGY4MGJkMS5wbmciLCJ3aWR0aCI6Ijw9NzcyIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0.NCjubTX38X0r0WdoAobAnTvC05olh7IXwLbu0qniXpA">
+        <img id="yarnImagePreview" src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/0478d388-e8c3-480e-b46b-253a3eea9431/dib082h-9c97a93d-bf7c-4a6c-b672-8c4654f80bd1.png/v1/fit/w_772,h_920/dogman__dog_man__render_by_versusstockpile_dib082h-414w-2x.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9OTIwIiwicGF0aCI6IlwvZlwvMDQ3OGQzODgtZThjMy00ODBlLWI0NmItMjUzYTNlZWE5NDMxXC9kaWIwODJoLTljOTdhOTNkLWJmN2MtNGE2Yy1iNjcyLThjNDY1NGY4MGJkMS5wbmciLCJ3aWR0aCI6Ijw9NzcyIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0.NCjubTX38X0r0WdoAobAnTvC05olh7IXwLbu0qniXpA" alt="Yarn Preview">
+
+        <label for="speedImageURL">Speed Power-Up (Pizza) Image URL:</label>
+        <input type="text" id="speedImageURL" value="https://png.pngtree.com/png-vector/20240730/ourmid/pngtree-pizza-with-cheese-on-a-white-background-top-viewvery-high-quality-png-image_13292309.png">
+        <img id="speedImagePreview" src="https://png.pngtree.com/png-vector/20240730/ourmid/pngtree-pizza-with-cheese-on-a-white-background-top-viewvery-high-quality-png-image_13292309.png" alt="Speed Preview">
+
+        <label for="giftImageURL">Gift Power-Up Image URL:</label>
+        <input type="text" id="giftImageURL" value="https://static.vecteezy.com/system/resources/thumbnails/015/693/011/small_2x/blue-gift-box-as-a-sign-of-christmas-greetings-these-assets-can-be-used-for-design-banners-advertisements-and-so-on-gift-box-illustration-files-free-png.png">
+        <img id="giftImagePreview" src="https://static.vecteezy.com/system/resources/thumbnails/015/693/011/small_2x/blue-gift-box-as-a-sign-of-christmas-greetings-these-assets-can-be-used-for-design-banners-advertisements-and-so-on-gift-box-illustration-files-free-png.png" alt="Gift Preview">
+
+        <label for="squirrelImageURL">Squirrel Image URL:</label>
+        <input type="text" id="squirrelImageURL" value="https://www.nps.gov/articles/images/flying-squirrel2.png">
+        <img id="squirrelImagePreview" src="https://www.nps.gov/articles/images/flying-squirrel2.png" alt="Squirrel Preview">
+
+        <label for="giftOutfitImageURL">Gift Outfit Image URL:</label>
+        <input type="text" id="giftOutfitImageURL" value="https://file.aiquickdraw.com/imgcompressed/img/compressed_b3f3c6529453424966ee04dac00bb4ce.webp">
+        <img id="giftOutfitImagePreview" src="https://file.aiquickdraw.com/imgcompressed/img/compressed_b3f3c6529453424966ee04dac00bb4ce.webp" alt="Gift Outfit Preview">
+
+        <button id="applyButton" onclick="applySettings()">Apply</button>
+        <button id="fullscreenButton" onclick="goFullscreen()">Full Screen</button>
+        <button id="minimizeButton" onclick="exitFullscreen()">Minimize</button>
+      </div>
+      <div id="controlsContainer">
+        <button id="muteButton" onclick="toggleMute()">Mute Sound</button>
+        <div id="speedSliderContainer">
+          <input type="range" id="speedSlider" min="0.5" max="2" step="0.1" value="1">
+          <span id="speedLabel">1x</span>
+        </div>
+      </div>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+  </div>
+
+  <script>
+    const gameContainer = document.getElementById('gameContainer');
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreDisplay = document.getElementById('score');
+    const highScoreDisplay = document.getElementById('highScore');
+    const speedSlider = document.getElementById('speedSlider');
+    const speedLabel = document.getElementById('speedLabel');
+
+    // Set canvas to full screen initially
+    canvas.width = window.innerWidth - 200;
+    canvas.height = window.innerHeight;
+
+    // Game Variables
+    let catX = canvas.width / 2;
+    let catY = canvas.height - 120;
+    let catWidth = 120;
+    const catHeight = 100;
+    let catSpeed = 16;
+    let score = 0;
+    let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 0;
+    let gameOver = false;
+    let gameStarted = false;
+    let wobble = 0;
+    let powerUpActive = null;
+    let powerUpTimer = 0;
+    let isMuted = false;
+    let fHeld = false;
+    let isJumping = false;
+    let jumpVelocity = 0;
+    const jumpStrength = -28;
+    const gravity = 1;
+    let flipAngle = 0;
+    let keysPressed = {};
+    let originalCatImageSrc = "https://pngmax.com/_next/image?url=https%3A%2F%2Fpng-max.s3.ap-south-1.amazonaws.com%2Flow%2F936505e8-677a-4a6a-af4e-e4a8c0f31dc9.png&w=1200&q=75";
+
+    // Initialize displays
+    scoreDisplay.textContent = `Score: ${score}`;
+    highScoreDisplay.textContent = `High Score: ${highScore}`;
+
+    const items = [];
+    const yarns = [];
+    const squirrels = [];
+    let nextItemTime = 0;
+    let nextYarnTime = 0;
+    let nextSquirrelTime = 0;
+    let baseSpeed = 2;
+    const speedIncrease = 0.03;
+    const maxItems = 3;
+    let gameSpeed = 1;
+
+    // Images (Load defaults immediately)
+    const catImage = new Image();
+    catImage.src = originalCatImageSrc;
+    const iceCreamImage = new Image();
+    iceCreamImage.src = "https://pngmax.com/_next/image?url=https%3A%2F%2Fpng-max.s3.ap-south-1.amazonaws.com%2Flow%2F4b6460bb-09ae-433c-b16a-d19d30adbc8e.png&w=1200&q=75";
+    const backgroundImage = new Image();
+    backgroundImage.src = "https://files.oaiusercontent.com/file-3BAUCABVh6pb5H4LQb9eqt?se=2025-02-20T21%3A39%3A37Z&sp=r&sv=2024-08-04&sr=b&rscc=max-age%3D604800%2C%20immutable%2C%20private&rscd=attachment%3B%20filename%3D72537f95-595a-4747-a5c8-e53d92bd9864.webp&sig=ynRoxtoqplmNH8j/deqeFrTaJr%2B8b30o2ZVBAPVXx4k%3D";
+    const yarnImage = new Image();
+    yarnImage.src = "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/0478d388-e8c3-480e-b46b-253a3eea9431/dib082h-9c97a93d-bf7c-4a6c-b672-8c4654f80bd1.png/v1/fit/w_772,h_920/dogman__dog_man__render_by_versusstockpile_dib082h-414w-2x.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9OTIwIiwicGF0aCI6IlwvZlwvMDQ3OGQzODgtZThjMy00ODBlLWI0NmItMjUzYTNlZWE5NDMxXC9kaWIwODJoLTljOTdhOTNkLWJmN2MtNGE2Yy1iNjcyLThjNDY1NGY4MGJkMS5wbmciLCJ3aWR0aCI6Ijw9NzcyIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0.NCjubTX38X0r0WdoAobAnTvC05olh7IXwLbu0qniXpA";
+    const speedImage = new Image();
+    speedImage.src = "https://png.pngtree.com/png-vector/20240730/ourmid/pngtree-pizza-with-cheese-on-a-white-background-top-viewvery-high-quality-png-image_13292309.png";
+    const giftImage = new Image();
+    giftImage.src = "https://static.vecteezy.com/system/resources/thumbnails/015/693/011/small_2x/blue-gift-box-as-a-sign-of-christmas-greetings-these-assets-can-be-used-for-design-banners-advertisements-and-so-on-gift-box-illustration-files-free-png.png";
+    const squirrelImage = new Image();
+    squirrelImage.src = "https://www.nps.gov/articles/images/flying-squirrel2.png";
+    const giftOutfitImage = new Image();
+    giftOutfitImage.src = "https://file.aiquickdraw.com/imgcompressed/img/compressed_b3f3c6529453424966ee04dac00bb4ce.webp";
+
+    // Catch Words
+    const catWords = [
+      "Catastic!", "Meow-Zow!", "Purr-Pow!", "Whisker-Bam!", 
+      "Feline-Fling!", "Kitty-Kapow!", "Claw-some!", "Paws-Plosion!"
+    ];
+    let catchText = null;
+
+    // Speed Slider Logic
+    speedSlider.addEventListener('input', () => {
+      gameSpeed = parseFloat(speedSlider.value);
+      speedLabel.textContent = `${gameSpeed.toFixed(1)}x`;
+    });
+
+    // Full Screen Logic
+    function goFullscreen() {
+      if (gameContainer.requestFullscreen) {
+        gameContainer.requestFullscreen();
+      } else if (gameContainer.webkitRequestFullscreen) {
+        gameContainer.webkitRequestFullscreen();
+      } else if (gameContainer.msRequestFullscreen) {
+        gameContainer.msRequestFullscreen();
+      }
+      canvas.width = screen.width - 200;
+      canvas.height = screen.height;
+      document.getElementById('fullscreenButton').style.display = 'none';
+      document.getElementById('minimizeButton').style.display = 'block';
+      resetGamePosition();
+    }
+
+    function exitFullscreen() {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+      canvas.width = window.innerWidth - 200;
+      canvas.height = window.innerHeight;
+      document.getElementById('fullscreenButton').style.display = 'block';
+      document.getElementById('minimizeButton').style.display = 'none';
+      resetGamePosition();
+    }
+
+    function resetGamePosition() {
+      catX = canvas.width / 2;
+      catY = canvas.height - 120;
+      items.length = 0;
+      yarns.length = 0;
+      squirrels.length = 0;
+    }
+
+    // Item Creation (Falling)
+    function createItem() {
+      const isPowerUp = Math.random() < 0.15;
+      return {
+        x: Math.random() * (canvas.width - 60),
+        y: 0,
+        width: 60,
+        height: 60,
+        speed: baseSpeed + Math.random() * 1,
+        type: isPowerUp ? 'speed' : 'iceCream',
+        splatTimer: 0
+      };
+    }
+
+    // Squirrel Creation (Flying in with Gift)
+    function createSquirrel() {
+      return {
+        x: canvas.width,
+        y: 50 + Math.random() * 100,
+        width: 80,
+        height: 60,
+        speed: 4,
+        hasGift: true
+      };
+    }
+
+    // Yarn Creation (Horizontal)
+    function createYarn() {
+      return {
+        x: -60,
+        y: canvas.height - 120,
+        width: 60,
+        height: 60,
+        speed: 4 + Math.random() * 2,
+        wiggle: 0
+      };
+    }
+
+    // Cat Movement
+    document.addEventListener('keydown', (event) => {
+      keysPressed[event.key] = true;
+      if (event.key === 'ArrowUp' && !isJumping && gameStarted) {
+        isJumping = true;
+        jumpVelocity = jumpStrength;
+        flipAngle = 0;
+        playSound(660, 0.1);
+      }
+      if (!gameStarted && event.code === 'Space') {
+        gameStarted = true;
+        gameLoop();
+      }
+      if (gameOver && event.code === 'Space') {
+        resetGame();
+      }
+    });
+
+    document.addEventListener('keyup', (event) => {
+      keysPressed[event.key] = false;
+    });
+
+    function updateMovement() {
+      if (keysPressed['ArrowLeft']) {
+        catX -= (fHeld ? catSpeed * 2 : catSpeed) * gameSpeed;
+        if (!isJumping) wobble = -10;
+        if (catX < 0) catX = 0;
+      }
+      if (keysPressed['ArrowRight']) {
+        catX += (fHeld ? catSpeed * 2 : catSpeed) * gameSpeed;
+        if (!isJumping) wobble = 10;
+        if (catX > canvas.width - catWidth) catX = canvas.width - catWidth;
+      }
+      if (keysPressed['f']) {
+        fHeld = true;
+      } else {
+        fHeld = false;
+      }
+    }
+
+    // Sound Effects
+    function playSound(frequency, duration) {
+      if (isMuted) return;
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      oscillator.type = 'square';
+      oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+      oscillator.connect(audioCtx.destination);
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + duration);
+    }
+
+    function toggleMute() {
+      isMuted = !isMuted;
+      document.getElementById('muteButton').textContent = isMuted ? 'Unmute Sound' : 'Mute Sound';
+    }
+
+    // Settings and Score Feedback
+    function applySettings() {
+      catImage.src = document.getElementById('catImageURL').value;
+      originalCatImageSrc = catImage.src;
+      iceCreamImage.src = document.getElementById('iceCreamImageURL').value;
+      backgroundImage.src = document.getElementById('backgroundImageURL').value;
+      yarnImage.src = document.getElementById('yarnImageURL').value;
+      speedImage.src = document.getElementById('speedImageURL').value;
+      giftImage.src = document.getElementById('giftImageURL').value;
+      squirrelImage.src = document.getElementById('squirrelImageURL').value;
+      giftOutfitImage.src = document.getElementById('giftOutfitImageURL').value;
+
+      // Update thumbnails
+      document.getElementById('catImagePreview').src = catImage.src;
+      document.getElementById('iceCreamImagePreview').src = iceCreamImage.src;
+      document.getElementById('backgroundImagePreview').src = backgroundImage.src;
+      document.getElementById('yarnImagePreview').src = yarnImage.src;
+      document.getElementById('speedImagePreview').src = speedImage.src;
+      document.getElementById('giftImagePreview').src = giftImage.src;
+      document.getElementById('squirrelImagePreview').src = squirrelImage.src;
+      document.getElementById('giftOutfitImagePreview').src = giftOutfitImage.src;
+    }
+
+    function updateScore(newScore) {
+      score = newScore;
+      scoreDisplay.textContent = `Score: ${score}`;
+      scoreDisplay.style.transform = 'scale(1.2)';
+      setTimeout(() => { scoreDisplay.style.transform = 'scale(1)'; }, 200);
+
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem('highScore', highScore);
+        highScoreDisplay.textContent = `High Score: ${highScore}`;
+        celebrateHighScore();
+      }
+    }
+
+    function celebrateHighScore() {
+      const celebrationText = "New High Score!";
+      ctx.font = '80px sans-serif';
+      ctx.fillStyle = 'gold';
+      ctx.fillText(celebrationText, canvas.width / 2 - 300, canvas.height / 2 - 50);
+      setTimeout(() => {}, 2000); // Celebration lasts 2 seconds (handled by frame redraw)
+    }
+
+    // Game Loop
+    function gameLoop() {
+      if (!gameStarted) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (backgroundImage.complete && backgroundImage.naturalWidth > 0) {
+          ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+        } else {
+          ctx.fillStyle = '#87CEEB'; // Fallback sky blue
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        ctx.font = '60px sans-serif';
+        ctx.fillStyle = 'white';
+        ctx.fillText('Press Space to Start!', canvas.width / 2 - 300, canvas.height / 2);
+        requestAnimationFrame(gameLoop);
+        return;
+      }
+
+      if (gameOver) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+        ctx.font = '60px sans-serif';
+        ctx.fillStyle = 'red';
+        ctx.fillText('Game Over! Press Space to Restart', canvas.width / 2 - 500, canvas.height / 2);
+        return;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+
+      // Update Power-Up
+      if (powerUpActive && powerUpTimer > 0) {
+        powerUpTimer--;
+        if (powerUpTimer <= 0) {
+          powerUpActive = null;
+          catSpeed = 16;
+          if (catImage.src === giftOutfitImage.src) {
+            catImage.src = originalCatImageSrc;
+          }
+        }
+      }
+
+      // Handle Jumping and Flipping
+      if (isJumping) {
+        catY += jumpVelocity * gameSpeed;
+        jumpVelocity += gravity * gameSpeed;
+        flipAngle += 0.2 * gameSpeed;
+        if (catY >= canvas.height - 120) {
+          catY = canvas.height - 120;
+          isJumping = false;
+          jumpVelocity = 0;
+          flipAngle = 0;
+        }
+      }
+
+      // Update Movement
+      updateMovement();
+
+      // Draw Cat with Wobble or Flip
+      wobble *= 0.85;
+      ctx.save();
+      ctx.translate(catX + catWidth / 2, catY + catHeight / 2);
+      ctx.rotate(isJumping ? flipAngle : wobble * Math.PI / 180);
+      ctx.drawImage(catImage, -catWidth / 2, -catHeight / 2, catWidth, catHeight);
+      if (isJumping) {
+        ctx.font = '32px sans-serif';
+        ctx.fillStyle = 'purple';
+        ctx.fillText('Purrr!', -catWidth / 2, -catHeight / 2 - 20);
+      }
+      ctx.restore();
+
+      // Spawn Falling Items (Ice Cream and Pizza)
+      if (Date.now() > nextItemTime && items.length < maxItems) {
+        items.push(createItem());
+        nextItemTime = Date.now() + 2000 / gameSpeed;
+      }
+
+      // Spawn Squirrels (Gift Drop)
+      if (Date.now() > nextSquirrelTime && squirrels.length < 1) {
+        squirrels.push(createSquirrel());
+        nextSquirrelTime = Date.now() + (8000 + Math.random() * 4000) / gameSpeed;
+      }
+
+      // Spawn Yarn Balls (Dog Man)
+      if (Date.now() > nextYarnTime && yarns.length < 2) {
+        yarns.push(createYarn());
+        nextYarnTime = Date.now() + (3000 + Math.random() * 2000) / gameSpeed;
+      }
+
+      // Update and Draw Squirrels
+      for (let i = squirrels.length - 1; i >= 0; i--) {
+        const squirrel = squirrels[i];
+        squirrel.x -= squirrel.speed * gameSpeed;
+        ctx.drawImage(squirrelImage, squirrel.x, squirrel.y, squirrel.width, squirrel.height);
+
+        // Drop Gift when near center
+        if (squirrel.hasGift && squirrel.x < canvas.width / 2) {
+          items.push({
+            x: squirrel.x,
+            y: squirrel.y + squirrel.height,
+            width: 60,
+            height: 60,
+            speed: baseSpeed + Math.random() * 1,
+            type: 'gift',
+            splatTimer: 0
+          });
+          squirrel.hasGift = false;
+        }
+
+        // Remove squirrel when off-screen
+        if (squirrel.x < -squirrel.width) {
+          squirrels.splice(i, 1);
+        }
+      }
+
+      // Update and Draw Falling Items
+      for (let i = items.length - 1; i >= 0; i--) {
+        const item = items[i];
+        if (!item.splatTimer) item.y += item.speed * gameSpeed;
+
+        if (item.splatTimer > 0) {
+          ctx.fillStyle = 'pink';
+          ctx.beginPath();
+          ctx.arc(item.x + item.width / 2, canvas.height - 20, 40, 0, Math.PI * 2);
+          ctx.fill();
+          item.splatTimer--;
+          if (item.splatTimer <= 0) items.splice(i, 1);
+          continue;
+        }
+
+        if (item.type === 'iceCream') {
+          ctx.drawImage(iceCreamImage, item.x, item.y, item.width, item.height);
+        } else if (item.type === 'speed') {
+          ctx.drawImage(speedImage, item.x, item.y, item.width, item.height);
+        } else if (item.type === 'gift') {
+          ctx.drawImage(giftImage, item.x, item.y, item.width, item.height);
+        }
+
+        // Collision Detection (Falling Items)
+        if (item.x < catX + catWidth &&
+            item.x + item.width > catX &&
+            item.y < catY + catHeight &&
+            item.y + item.height > catY && !item.splatTimer) {
+          updateScore(score + 1);
+          playSound(440, 0.1);
+          catchText = { text: catWords[Math.floor(Math.random() * catWords.length)], x: item.x, y: item.y, timer: 30 };
+          if (item.type === 'speed') {
+            powerUpActive = 'speed';
+            powerUpTimer = 200;
+            catSpeed = 24;
+          } else if (item.type === 'gift') {
+            powerUpActive = 'gift';
+            powerUpTimer = 480; // 8 seconds at 60fps
+            catImage.src = giftOutfitImage.src;
+          }
+          items.splice(i, 1);
+        } else if (item.y > canvas.height) {
+          if (item.type === 'iceCream') {
+            item.splatTimer = 60;
+            gameOver = true;
+            playSound(220, 0.3);
+          } else {
+            items.splice(i, 1);
+          }
+        }
+      }
+
+      // Update and Draw Yarn Balls (Dog Man)
+      for (let i = yarns.length - 1; i >= 0; i--) {
+        const yarn = yarns[i];
+        yarn.x += yarn.speed * gameSpeed;
+        yarn.wiggle = Math.sin(yarn.x * 0.1) * 10;
+
+        ctx.drawImage(yarnImage, yarn.x, yarn.y + yarn.wiggle - 30, yarn.width, yarn.height + 30);
+
+        // Collision Detection (Yarn)
+        if (yarn.x < catX + catWidth &&
+            yarn.x + yarn.width > catX &&
+            yarn.y < catY + catHeight &&
+            yarn.y + yarn.height > catY) {
+          gameOver = true;
+          playSound(110, 0.5);
+        } else if (yarn.x > canvas.width) {
+          yarns.splice(i, 1);
+        }
+      }
+
+      // Draw Catch Text
+      if (catchText && catchText.timer > 0) {
+        ctx.save();
+        ctx.translate(catchText.x, catchText.y);
+        ctx.rotate(Math.PI / 6 * (Math.random() - 0.5));
+        ctx.font = '48px sans-serif';
+        ctx.fillStyle = 'orange';
+        ctx.fillText(catchText.text, 0, 0);
+        ctx.restore();
+        catchText.timer--;
+        catchText.y -= 2 * gameSpeed;
+      }
+
+      // Update Score
+      baseSpeed += speedIncrease / 60 * gameSpeed;
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Reset Game
+    function resetGame() {
+      gameOver = false;
+      gameStarted = true;
+      score = 0;
+      scoreDisplay.textContent = `Score: ${score}`;
+      items.length = 0;
+      yarns.length = 0;
+      squirrels.length = 0;
+      catX = canvas.width / 2;
+      catY = canvas.height - 120;
+      baseSpeed = 2;
+      catSpeed = 16;
+      catWidth = 120;
+      powerUpActive = null;
+      nextItemTime = 0;
+      nextYarnTime = 0;
+      nextSquirrelTime = 0;
+      catImage.src = originalCatImageSrc;
+      gameLoop();
+    }
+
+    // Start the game loop
+    gameLoop();
+
+    // Ensure applySettings runs on page load to sync previews
+    window.onload = () => {
+      applySettings();
+    };
+  </script>
+</body>
+</html>
